@@ -1,0 +1,47 @@
+What is EQ4J?
+
+  EQ4J - Entity Query for JPA - is a type safe, entity object based query API on top of JPA-QL.
+  
+Why EQ4J?
+
+  The problem with JPA-QL is it is String based, so the Java type system can not help here.
+  If you have typos on field name, you wouldn't find out until you actually run it.
+  If you want to change name, refactor won't be able to help, you have to find & replace.
+  
+  Yes, there is Criteria API, but it sucks. it is ugly, cumbersome, hard to use and maintain.
+
+How EQ4J works?
+
+  EQ4J is built around the JPA Entity, the query is written in strong typed Java codes and eventually
+get translated into String based JPA-QL.
+
+  for example, 
+  Say we have an entity class:
+  
+	@Entity
+	public class User {
+
+		private int age;
+		private String name;
+		
+		// more fields
+
+		public int getAge() {
+			return age;
+		}
+
+		public String getName() {
+			return name;
+		}
+		
+		// more codes
+	}
+
+  JPA-QL:
+	select u from User u where u.name = :name and u.age > :age
+
+  EQ4J:
+	Select<User> select = select();
+	User u = select.from(User.class);
+	select.where(u.getName(), equalsTo("some name"))
+		  .and(u.getAge(), greatThan(12));
