@@ -15,8 +15,7 @@ How EQ4J works?
   EQ4J is built around the JPA Entity, the query is written in strong typed Java codes and eventually
 get translated into String based JPA-QL.
 
-  for example, 
-  Say we have an entity class:
+  for example, given an entity class:
   
 	@Entity
 	public class User {
@@ -43,5 +42,11 @@ get translated into String based JPA-QL.
   EQ4J:
 	Select<User> select = select();
 	User u = select.from(User.class);
+
 	select.where(u.getName(), equalsTo("some name"))
-		  .and(u.getAge(), greatThan(12));
+		    .and(u.getAge(), greatThan(12));
+
+	// convert to javax.persistence.TypedQuery
+	// can either get result or do a bit more settings
+	TypedQuery<User> query = select.toTypedQuery(entityManager);
+
