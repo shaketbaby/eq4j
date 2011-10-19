@@ -8,12 +8,14 @@ import net.sf.cglib.proxy.MethodProxy;
 
 class Entity<E> implements MethodInterceptor {
 
-	private E proxy;
+	private final String alias;
+	private final E proxy;
 	private final Class<E> entityType;
-
-	public Entity(Class<E> entityType) {
+	
+	public Entity(Class<E> entityType, String alias) {
 		this.entityType = entityType;
-		this.proxy = entityType.cast(Enhancer.create(entityType, this));
+		this.alias = alias;
+		this.proxy = createProxy(entityType);
 	}
 	
 	public Class<E> getType() {
@@ -24,8 +26,26 @@ class Entity<E> implements MethodInterceptor {
 		return proxy;
 	}
 
-	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-		return null;
+	public String getAlias() {
+		return alias;
 	}
 
+	public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+		Field.pushField(this, method);
+
+		if (isSimpleType(method.getReturnType())) {
+			return proxy.invokeSuper(obj, args);
+		}
+
+		// return type is also an entity or a component
+		return createProxy(method.getReturnType());
+	}
+
+	private <T> T createProxy(Class<T> entityType) {
+		return entityType.cast(Enhancer.create(entityType, this));
+	}
+
+	private boolean isSimpleType(Class<?> returnType) {
+		return false;
+	}
 }

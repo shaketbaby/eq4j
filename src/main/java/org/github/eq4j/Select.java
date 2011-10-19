@@ -1,27 +1,14 @@
 package org.github.eq4j;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 
-public final class Select<E> {
+public final class Select<E> extends Statement<E> {
 	
-	private Entity<E> entity;
-
 	public E from(Class<E> entityType) {
-		this.entity = new Entity<E>(entityType);
-		return entity.getProxy();
-	}
-
-	public <F> Condition where(F field, Operation<F> operation) {
-		return null;
+		return entity(entityType);
 	}
 
 	public void groupBy(Object field, Object... fields) {
 		
-	}
-
-	public TypedQuery<E> toJPAQuery(EntityManager em) {
-		return em.createQuery("", entity.getType());
 	}
 
 }
