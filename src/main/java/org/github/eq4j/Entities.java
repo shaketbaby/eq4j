@@ -10,10 +10,9 @@ import net.sf.cglib.proxy.Factory;
 
 public final class Entities {
 
-	private static NamingPolicy namingPolicy = new NamePolicy();
+	private static final NamingPolicy namingPolicy = new NamePolicy();
 	private static final Class<?>[] INTERFACES = { Entity.class };
-	private static final Class<?>[] CALLBACK_TYPES = { EntityProxy.class };
-	private static Map<Class<?>, Factory> factoryCache = new HashMap<Class<?>, Factory>();
+	private static final Map<Class<?>, Factory> factoryCache = new HashMap<Class<?>, Factory>();
 
 	public static <E> E entityOf(Class<E> entityType) {
 		Factory factory = getOrCreateFactory(entityType);
@@ -45,16 +44,26 @@ public final class Entities {
 		enhancer.setUseFactory(true);
 		enhancer.setSuperclass(entityType);
 		enhancer.setInterfaces(INTERFACES);
-		enhancer.setCallbackTypes(CALLBACK_TYPES);
+		enhancer.setCallback(new EntityProxy());
 		enhancer.setInterceptDuringConstruction(false);
 		enhancer.setNamingPolicy(namingPolicy);
 		return Factory.class.cast(enhancer.create());
 	}
 
 	private static final class NamePolicy implements NamingPolicy {
+		private long sequence = 1;
+
 		@Override
 		public String getClassName(String prefix, String source, Object key, Predicate names) {
-			return prefix + "$$EnhancedByCglibForEQ4J" + key.hashCode();
+			return packageName() + "." + className(prefix) + "$$EnhancedByCglibForEQ4J$$" + (sequence++);
+		}
+
+		private String packageName() {
+			return Entity.class.getPackage().getName();
+		}
+
+		private String className(String className) {
+			return className == null ? "Proxy" : className.substring(className.lastIndexOf('.') + 1);
 		}
 	}
 }
