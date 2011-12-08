@@ -1,11 +1,8 @@
 package org.github.eq4j;
 
-interface Entity {
-	
-	String getPath();
-	
-	Entity getParent_EQ4J();
+interface Entity
+{
+	void setAlias_EQ4J(String path);
 
-	String getAlias_EQ4J();
-	void setAlias_EQ4J(String alias);
+	Path getPath_EQ4J();
 }

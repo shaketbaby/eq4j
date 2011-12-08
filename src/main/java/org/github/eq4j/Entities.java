@@ -14,17 +14,16 @@ public final class Entities {
 	private static final Class<?>[] INTERFACES = { Entity.class };
 	private static final Map<Class<?>, Factory> factoryCache = new HashMap<Class<?>, Factory>();
 
-	public static <E> E entityOf(Class<E> entityType) {
-		Factory factory = getOrCreateFactory(entityType);
-		return entityType.cast(factory.newInstance(new EntityProxy()));
+	public static <E> E entityOf(final Class<E> entityType) {
+		return entityOf(entityType, new EntityProxy());
 	}
 
-	static <E> E entityOf(Class<E> entityType, Entity parent, String path) {
+	static <E> E entityOf(final Class<E> entityType, final EntityProxy proxy) {
 		Factory factory = getOrCreateFactory(entityType);
-		return entityType.cast(factory.newInstance(new EntityProxy(parent, path)));
+		return entityType.cast(factory.newInstance(proxy));
 	}
 
-	private static <E> Factory getOrCreateFactory(Class<E> entityType) {
+	private static <E> Factory getOrCreateFactory(final Class<E> entityType) {
 		Factory factory = factoryCache.get(entityType);
 		if (factory == null) {
 			synchronized (factoryCache) {
@@ -38,7 +37,7 @@ public final class Entities {
 		return factory;
 	}
 
-	private static <E> Factory createFactory(Class<E> entityType) {
+	private static <E> Factory createFactory(final Class<E> entityType) {
 		Enhancer enhancer = new Enhancer();
 		enhancer.setUseCache(false);
 		enhancer.setUseFactory(true);
@@ -54,15 +53,15 @@ public final class Entities {
 		private long sequence = 1;
 
 		@Override
-		public String getClassName(String prefix, String source, Object key, Predicate names) {
-			return packageName() + "." + className(prefix) + "$$EnhancedByCglibForEQ4J$$" + (sequence++);
+		public String getClassName(final String prefix, final String source, final Object key, final Predicate names) {
+			return packageName() + "." + className(prefix) + "$$EnhancedByCglibForEQ4J$$" + sequence++;
 		}
 
 		private String packageName() {
 			return Entity.class.getPackage().getName();
 		}
 
-		private String className(String className) {
+		private String className(final String className) {
 			return className == null ? "Proxy" : className.substring(className.lastIndexOf('.') + 1);
 		}
 	}
