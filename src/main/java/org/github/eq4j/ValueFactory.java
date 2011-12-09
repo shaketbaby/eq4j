@@ -1,16 +1,22 @@
 package org.github.eq4j;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.lang.Character.MAX_RADIX;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Integer.MIN_VALUE;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 class ValueFactory
 {
-	private static final List<Producer> producers = Arrays.<Producer> asList(
-		new IntegerProducer(), new ByteProducer()
-	);
+	private static final Sequence sequence = new Sequence();
+	private static final List<Producer> producers = producers();
 
-	public static Object uniqueValueFor(final Class<?> type)
+	public static Object valueFor(final Class<?> type) throws Exception
 	{
 		return findProducer(type).produce(type);
 	}
@@ -27,44 +33,168 @@ class ValueFactory
 
 	private static abstract class Producer
 	{
-		private static final AtomicLong sequence = new AtomicLong(Long.MIN_VALUE);
+		protected List<Class<?>> classes;
 
-		abstract boolean canProduce(final Class<?> type);
-		abstract Object produce(final Class<?> type);
-
-		protected Long nextSequence()
+		Producer(final Class<?>... classes)
 		{
-			return Long.valueOf(sequence.incrementAndGet());
+			this.classes = Arrays.asList(classes);
 		}
+
+		boolean canProduce(final Class<?> type)
+		{
+			return classes.contains(type);
+		}
+
+		abstract Object produce(final Class<?> type) throws Exception;
 	}
 
-	private static class ByteProducer extends Producer
+	private static List<Producer> producers()
 	{
-		@Override
-		public boolean canProduce(final Class<?> type)
-		{
-			return Byte.class.equals(type) || byte.class.equals(type);
-		}
+		return Arrays.<Producer>asList(
+			new Producer(String.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return String.valueOf(sequence.nextInt());
+				}
+			},
+			new Producer(int.class, Integer.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Integer.valueOf(sequence.nextInt());
+				}
+			},
+			new Producer(long.class, Long.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Long.valueOf(sequence.nextLong());
+				}
+			},
+			new Producer(Enum.class)
+			{
+				@Override
+				boolean canProduce(final Class<?> type)
+				{
+					return type.isEnum();
+				}
 
-		@Override
-		public Object produce(final Class<?> type)
-		{
-			return Byte.valueOf(nextSequence().byteValue());
-		}
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					final Object[] enumConstants = type.getEnumConstants();
+					return enumConstants[sequence.nextInt() % enumConstants.length];
+				}
+			},
+			new Producer(BigDecimal.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return new BigDecimal(sequence.nextInt());
+				}
+			},
+			new Producer(java.sql.Date.class, java.sql.Time.class, java.sql.Timestamp.class)
+			{
+				@Override
+				public Object produce(final Class<?> type) throws Exception
+				{
+					return type.getConstructor(long.class).newInstance(sequence.nextLong());
+				}
+			},
+			new Producer(boolean.class, Boolean.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return sequence.nextInt() % 2 == 0 ? TRUE : FALSE;
+				}
+			},
+			new Producer(double.class, Double.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Double.valueOf(sequence.nextInt());
+				}
+			},
+			new Producer(float.class, Float.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Float.valueOf(sequence.nextInt());
+				}
+			},
+			new Producer(short.class, Short.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Short.valueOf((short)sequence.nextInt());
+				}
+			},
+			new Producer(byte.class, Byte.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Byte.valueOf((byte)sequence.nextInt());
+				}
+			},
+			new Producer(BigInteger.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return BigInteger.valueOf(sequence.nextInt());
+				}
+			},
+			new Producer(char.class, Character.class)
+			{
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Character.forDigit(sequence.nextInt() % MAX_RADIX, MAX_RADIX);
+				}
+			}
+		);
 	}
 
-	private static class IntegerProducer extends Producer
+	private static class Sequence
 	{
-		@Override
-		public boolean canProduce(final Class<?> type)
+		ThreadLocal<Value> value = new ThreadLocal<Value>();
+
+		Sequence()
 		{
-			return Integer.class.equals(type) || int.class.equals(type);
+			value.set(new Value());
 		}
 
-		@Override
-		public Object produce(final Class<?> type)
+		int nextInt()
 		{
-			return Integer.valueOf(nextSequence().intValue());
+			return value.get().next();
+		}
+
+		long nextLong()
+		{
+			return nextInt();
+		}
+
+		private class Value
+		{
+			private int value = MIN_VALUE;
+
+			private int next()
+			{
+				if (MAX_VALUE == value) {
+					value = MIN_VALUE;
+				}
+				return ++value;
+			}
 		}
 	}
 }

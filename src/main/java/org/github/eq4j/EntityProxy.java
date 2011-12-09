@@ -4,7 +4,7 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isPrivate;
 import static org.github.eq4j.Entities.entityOf;
 import static org.github.eq4j.Registry.registerPath;
-import static org.github.eq4j.ValueFactory.uniqueValueFor;
+import static org.github.eq4j.ValueFactory.valueFor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -36,7 +36,7 @@ class EntityProxy implements InvocationHandler, Entity
 		if (isProxyable(returnType)) {
 			return entityOf(returnType, new EntityProxy(newPath(proxy, method)));
 		}
-		return registerPath(uniqueValueFor(returnType), newPath(proxy, method));
+		return registerPath(valueFor(returnType), newPath(proxy, method));
 	}
 
 	private Path newPath(final Object proxy, final Method method)
