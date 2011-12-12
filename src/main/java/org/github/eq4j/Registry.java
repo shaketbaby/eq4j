@@ -12,6 +12,11 @@ class Registry
 		return value;
 	}
 
+	public static Path retrievePath(final Object value)
+	{
+		return uniqueValues.get().get(value);
+	}
+
 	private static <K, V> ThreadLocal<Map<K, V>> threadLocal() {
 		return new ThreadLocal<Map<K, V>>() {
 			@Override

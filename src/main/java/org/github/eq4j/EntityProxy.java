@@ -1,5 +1,6 @@
 package org.github.eq4j;
 
+import static java.lang.Character.toLowerCase;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isPrivate;
 import static org.github.eq4j.Entities.entityOf;
@@ -20,7 +21,7 @@ class EntityProxy implements InvocationHandler, Entity
 		this(new Path("", null));
 	}
 
-	public EntityProxy(final Path path)
+	private EntityProxy(final Path path)
 	{
 		this.path = path;
 	}
@@ -41,14 +42,26 @@ class EntityProxy implements InvocationHandler, Entity
 
 	private Path newPath(final Object proxy, final Method method)
 	{
-		final String name = method.getName();
-		final String localPath = name.startsWith("get") ? name.charAt(3) + name.substring(4) : name;
+		String localPath = extractLocalPath(method.getName());
 		return new Path(localPath, Entity.class.cast(proxy).getPath_EQ4J());
+	}
+
+	private String extractLocalPath(final String name)
+	{
+		String localPath = name;
+		for (String prefix : new String[] {"get", "is"}) {
+			if (name.startsWith(prefix)) {
+				int len = prefix.length();
+				localPath = toLowerCase(name.charAt(len)) + name.substring(len + 1);
+				break;
+			}
+		}
+		return localPath;
 	}
 
 	private boolean isProxyable(final Class<?> type)
 	{
-		return isNotPrivateOrFinal(type.getModifiers()) && hasNoArgContructor(type);
+		return type.isInterface() || isNotPrivateOrFinal(type.getModifiers()) && hasNoArgContructor(type);
 	}
 
 	private boolean isNotPrivateOrFinal(final int modifiers)

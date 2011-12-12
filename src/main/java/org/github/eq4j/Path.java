@@ -19,4 +19,28 @@ public class Path
 	{
 		this.path = path;
 	}
+
+	@Override
+	public boolean equals(final Object obj)
+	{
+		if (this == obj) {
+			return true;
+		}
+		if (!Path.class.isInstance(obj)) {
+			return false;
+		}
+		return getFullPath().equals(Path.class.cast(obj).getFullPath());
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return getFullPath().hashCode();
+	}
+
+	@Override
+	public String toString()
+	{
+		return getFullPath();
+	}
 }

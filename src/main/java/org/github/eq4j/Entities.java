@@ -1,5 +1,7 @@
 package org.github.eq4j;
 
+import static java.util.Arrays.copyOf;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,8 +43,14 @@ public final class Entities {
 		Enhancer enhancer = new Enhancer();
 		enhancer.setUseCache(false);
 		enhancer.setUseFactory(true);
-		enhancer.setSuperclass(entityType);
-		enhancer.setInterfaces(INTERFACES);
+		if (entityType.isInterface()) {
+			Class<?>[] interfaces = copyOf(INTERFACES, INTERFACES.length + 1);
+			interfaces[INTERFACES.length] = entityType;
+			enhancer.setInterfaces(interfaces);
+		} else {
+			enhancer.setSuperclass(entityType);
+			enhancer.setInterfaces(INTERFACES);
+		}
 		enhancer.setCallback(new EntityProxy());
 		enhancer.setInterceptDuringConstruction(false);
 		enhancer.setNamingPolicy(namingPolicy);
@@ -50,7 +58,7 @@ public final class Entities {
 	}
 
 	private static final class NamePolicy implements NamingPolicy {
-		private long sequence = 1;
+		private int sequence = 1;
 
 		@Override
 		public String getClassName(final String prefix, final String source, final Object key, final Predicate names) {
@@ -62,7 +70,7 @@ public final class Entities {
 		}
 
 		private String className(final String className) {
-			return className == null ? "Proxy" : className.substring(className.lastIndexOf('.') + 1);
+			return className == null ? "Proxy" : className.replace('.', '_');
 		}
 	}
 }

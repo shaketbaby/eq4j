@@ -6,6 +6,7 @@ import static java.lang.Character.MAX_RADIX;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.MIN_VALUE;
 
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -64,7 +65,7 @@ class ValueFactory
 				@Override
 				public Object produce(final Class<?> type)
 				{
-					return Integer.valueOf(sequence.nextInt());
+					return sequence.nextInt();//Integer.valueOf();
 				}
 			},
 			new Producer(long.class, Long.class)
@@ -75,7 +76,7 @@ class ValueFactory
 					return Long.valueOf(sequence.nextLong());
 				}
 			},
-			new Producer(Enum.class)
+			new Producer()
 			{
 				@Override
 				boolean canProduce(final Class<?> type)
@@ -87,7 +88,7 @@ class ValueFactory
 				public Object produce(final Class<?> type)
 				{
 					final Object[] enumConstants = type.getEnumConstants();
-					return enumConstants[sequence.nextInt() % enumConstants.length];
+					return enumConstants[Math.abs(sequence.nextInt()) % enumConstants.length];
 				}
 			},
 			new Producer(BigDecimal.class)
@@ -120,6 +121,20 @@ class ValueFactory
 				public Object produce(final Class<?> type)
 				{
 					return Double.valueOf(sequence.nextInt());
+				}
+			},
+			new Producer()
+			{
+				@Override
+				boolean canProduce(final Class<?> type)
+				{
+					return type.isArray();
+				}
+
+				@Override
+				public Object produce(final Class<?> type)
+				{
+					return Array.newInstance(type.getComponentType(), 0);
 				}
 			},
 			new Producer(float.class, Float.class)
@@ -165,18 +180,17 @@ class ValueFactory
 		);
 	}
 
-	private static class Sequence
+	private static class Sequence extends ThreadLocal<Sequence.Value>
 	{
-		ThreadLocal<Value> value = new ThreadLocal<Value>();
-
-		Sequence()
+		@Override
+		protected Value initialValue()
 		{
-			value.set(new Value());
+			return new Value();
 		}
 
 		int nextInt()
 		{
-			return value.get().next();
+			return get().next();
 		}
 
 		long nextLong()
@@ -196,5 +210,10 @@ class ValueFactory
 				return ++value;
 			}
 		}
+	}
+
+	// method only to be used by test class
+	static void setSequenceValue(final int value) {
+		sequence.get().value = value;
 	}
 }
