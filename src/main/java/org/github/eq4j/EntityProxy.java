@@ -1,16 +1,15 @@
 package org.github.eq4j;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import net.sf.cglib.proxy.InvocationHandler;
+
 import static java.lang.Character.toLowerCase;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isPrivate;
 import static org.github.eq4j.Entities.entityOf;
 import static org.github.eq4j.Registry.registerPath;
 import static org.github.eq4j.ValueFactory.valueFor;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-
-import net.sf.cglib.proxy.InvocationHandler;
 
 class EntityProxy implements InvocationHandler, Entity
 {
